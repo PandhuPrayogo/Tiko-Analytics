@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import MyLib.data_clean.data_cleaning as dc
 import matplotlib.pyplot as plt
+from src import data_clean as dc
+from src import desc_analyst as da
 
-'Route to run this program: '
 """
+Route to run this program: 
 1. Data Cleaning:
   1.a Rename column to uppercase
   1.b Deleting redudant columns
@@ -19,7 +20,7 @@ import matplotlib.pyplot as plt
 """
 
 # File path
-file_path = 'Files/Overview.xlsx'
+file_path = 'data/raw/Overview.xlsx'
 print("==== Welcome to Tiko Analytics ====")
 print("-----------------------------------")
 # Checking File
@@ -27,13 +28,23 @@ try:
   df = pd.read_excel(file_path)
   print(f"File: '{file_path}' load succesfully")
   print("-----------------------------------")
-  print(df.head(5))
+  print(f"Old DataFrame: {df.head(5)}")
 except FileNotFoundError:
   print(f"File: '{file_path}' is not found.")
 except Exception as e:
   print(f"File: '{file_path}' is not succesfully load.")
 
 # Data Cleaning
-print(df.to_string())
+data_cleaning = dc.DataCleaning(df).clean_data()
+print(data_cleaning)
+
+print(da.DescriptiveAnalyst(data_cleaning).monthly_summary())
+
+tedency_central = da.DescriptiveAnalyst(data_cleaning).central_tendency(df.columns)
+print(da.DescriptiveAnalyst(df).print_formatted_stats(tedency_central))
+
+
+# Fitur 2: Check healty status based on the Fitur 1:
+
 
 
