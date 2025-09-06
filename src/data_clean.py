@@ -1,60 +1,84 @@
-import locale
 import pandas as pd
+import locale
 
 class Data:
-  def __init__(self, df_input):
-    self.df = df_input
-  
-  def data_type(self):
-    return self.df.info()
-  
-  def summarize_stats(self):
-    return self.df.describe()
-  
-class DataCleaning(Data):
-  def clean_data(self):
-    # Change name columns to uppercase
-    old_columns = self.df.columns
-    new_columns = [i.upper() for i in old_columns]
-
-    self.df.columns = new_columns
-    # Formatting time and date
-    try:
-      locale.setlocale(locale.LC_TIME, 'id_ID.UTF-8')
-    except locale.Error:
-      locale.setlocale(locale.LC_TIME, 'indonesian')
-  
-    self.df['DATE'] = self.df['DATE'] + ' 2025'
-  
-    self.df['DATE'] = pd.to_datetime(self.df['DATE'], dayfirst=True, format='mixed')
-
-    # Check missing values
-    check_null = self.df.isnull().sum().sum()
-    if check_null == 0:
-      pass
-    else:
-      self.df = self.df.fillna(-1)
-
-    # Check duplicated data
-    check_duplicate = self.df.duplicated().sum()
-    if check_duplicate == 0:
-      pass
-    else:
-      self.df = self.df.drop_duplicates()
-
-    # Check outlier data per columns
-    ## Video Views
-    Q1 = self.df[self.df.columns].quantile(0.25)
-    Q3 = self.df[self.df.columns].quantile(0.75)
-    IQR = Q3 - Q1
-        
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-        
-    # Mendapatkan DataFrame dengan outlier
-    outlier_data = self.df[(self.df[new_columns] < lower_bound) | (self.df[new_columns] > upper_bound)]
+    """
+    Base class for data operations.
+    Manages the DataFrame and provides basic utilities.
+    """
+    def __init__(self, df_input: pd.DataFrame):
+        self.df = df_input
     
-    old_data = self.df[outlier_data.any(axis=1)].index
-    self.df.drop(old_data, inplace=True)
+    def get_data_types(self):
+        """
+        Returns a summary of DataFrame columns and their data types.
+        """
+        return self.df.info()
+    
+    def get_summary_stats(self):
+        """
+        Returns a descriptive statistical summary of the DataFrame.
+        """
+        return self.df.describe()
+    
+class DataCleaning(Data):
+    """
+    Performs all necessary data cleaning tasks.
+    """
+    def clean_data(self):
+        """
+        Executes the full data cleaning pipeline.
+        
+        Returns:
+            pd.DataFrame: A cleaned DataFrame or None if an error occurs.
+        """
+        # Change column names to uppercase and strip whitespace
+        self.df.columns = [col.upper().strip() for col in self.df.columns]
 
-    return self.df
+        # Convert the 'DATE' column to datetime objects
+        try:
+            # Set locale for month name parsing
+            try:
+                locale.setlocale(locale.LC_TIME, 'id_ID.UTF-8')
+            except locale.Error:
+                locale.setlocale(locale.LC_TIME, 'indonesian')
+            
+            # Add a year to the date string for proper parsing
+            self.df['DATE'] = self.df['DATE'].astype(str) + ' 2025'
+            # Use mixed format for flexibility
+            self.df['DATE'] = pd.to_datetime(self.df['DATE'], dayfirst=True, format='mixed')
+            self.df['MONTH'] = self.df['DATE'].dt.month
+        except Exception as e:
+            print(f"Error: Could not format 'DATE' column. Details: {e}")
+            return None 
+
+        # Fill missing values
+        if self.df.isnull().any().any():
+            self.df = self.df.fillna(-1)
+            print("Missing values have been filled with -1.")
+
+        # Drop duplicate data
+        if self.df.duplicated().any():
+            self.df = self.df.drop_duplicates().reset_index(drop=True)
+            print("Duplicate rows have been dropped.")
+        
+        # Identify and remove outliers based on IQR
+        numeric_cols = self.df.select_dtypes(include=['number']).columns
+        Q1 = self.df[numeric_cols].quantile(0.25)
+        Q3 = self.df[numeric_cols].quantile(0.75)
+        IQR = Q3 - Q1
+        
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        
+        # Create a boolean mask to filter out outliers
+        outlier_mask = (self.df[numeric_cols] < lower_bound) | (self.df[numeric_cols] > upper_bound)
+        
+        # Get the indices of rows containing outliers
+        outliers_index = self.df[outlier_mask.any(axis=1)].index
+        
+        # Remove the identified outlier rows
+        self.df = self.df.drop(outliers_index)
+        print(f"{len(outliers_index)} outliers were removed from the dataset.")
+
+        return self.df
