@@ -2,18 +2,12 @@ import numpy as np
 import pandas as pd
 
 class DescriptiveAnalyst:
-    """
-    Performs descriptive analytics on a given DataFrame.
-    """
     def __init__(self, df_input):
         self.df = df_input
 
     def monthly_summary(self):
         """
         Calculates a monthly summary for key performance metrics.
-        
-        Returns:
-            pd.DataFrame: A DataFrame with aggregated monthly stats.
         """
         # Columns to analyze for monthly summary
         columns_to_analyze = ['VIDEO VIEWS', 'PROFILE VIEWS', 'LIKES', 'COMMENTS', 'SHARES']
@@ -28,12 +22,6 @@ class DescriptiveAnalyst:
     def central_tendency(self, columns_name: list):
         """
         Calculates mean, median, and mode for specified columns.
-        
-        Args:
-            columns_name (list): A list of column names to analyze.
-        
-        Returns:
-            dict: A dictionary containing the central tendency stats for each column.
         """
         stats = {}
         for col in columns_name:
@@ -48,12 +36,6 @@ class DescriptiveAnalyst:
     def spread_tendency(self, columns_name: list):
         """
         Calculates variance, standard deviation, and IQR for specified columns.
-        
-        Args:
-            columns_name (list): A list of column names to analyze.
-        
-        Returns:
-            dict: A dictionary containing the spread stats for each column.
         """
         stats = {}
         for col in columns_name:

@@ -39,9 +39,9 @@ class DataCleaning(Data):
         try:
             # Set locale for month name parsing
             try:
-                locale.setlocale(locale.LC_TIME, 'id_ID.UTF-8')
+                locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
             except locale.Error:
-                locale.setlocale(locale.LC_TIME, 'indonesian')
+                locale.setlocale(locale.LC_TIME, 'C') # Fallback to a universal locale
             
             # Add a year to the date string for proper parsing
             self.df['DATE'] = self.df['DATE'].astype(str) + ' 2025'
@@ -68,10 +68,11 @@ class DataCleaning(Data):
         Q3 = self.df[numeric_cols].quantile(0.75)
         IQR = Q3 - Q1
         
+        # Create a boolean mask to filter out outliers
         lower_bound = Q1 - 1.5 * IQR
         upper_bound = Q3 + 1.5 * IQR
         
-        # Create a boolean mask to filter out outliers
+        # Get the indices of rows containing outliers
         outlier_mask = (self.df[numeric_cols] < lower_bound) | (self.df[numeric_cols] > upper_bound)
         
         # Get the indices of rows containing outliers
