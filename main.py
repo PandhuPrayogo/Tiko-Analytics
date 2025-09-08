@@ -2,11 +2,6 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import sys
-import os
-
-# Add 'src' directory to the system path for cleaner imports
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
 from src import data_clean as dc
 from src import desc_analyst as da
